@@ -13,7 +13,7 @@ export default new DataSource(
         type: 'postgres',
         url: dbConfig.url,
         entities: ['src/**/*.entity{.ts,.js}'],
-        migrations: ['src/migrations/*{.ts,.js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}'],
         ssl: {
           rejectUnauthorized: false,
         },
