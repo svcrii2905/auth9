@@ -26,6 +26,6 @@ export default new DataSource(
         password: dbConfig.password,
         database: dbConfig.name,
         entities: ['src/**/*.entity{.ts,.js}'],
-        migrations: ['src/migrations/*{.ts,.js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}'],
       },
 );
