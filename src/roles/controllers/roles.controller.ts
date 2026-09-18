@@ -1,26 +1,26 @@
 import { Body, Controller, Delete, Get, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
-import { UsersService } from '../services/users.service';
+import { RolesService } from '../services/roles.service';
 import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
-import { CreateUserDto, UpdateUserDto } from '../dtos/create-user.dto';
+import { CreateRolesDto, UpdateRolesDto } from '../dtos/create-roles.dto';
 
-@Controller('users')
-export class UsersController {
+@Controller('roles')
+export class RolesController {
 
-    constructor(private readonly usersService: UsersService) { }
+    constructor(private readonly rolesService: RolesService) { }
 
     @Get()
     @ApiOperation({ summary: 'Obtener la lista de todos los usuarios' })
-    @ApiResponse({ status: 200, description: 'Lista de usuarios obtenida correctamente.'})
+    @ApiResponse({ status: 200, description: 'Lista de usuarios obtenida correctamente.' })
     findAll() {
-        return this.usersService.findAll();
+        return this.rolesService.findAll();
     }
 
     @Post()
     @ApiOperation({ summary: 'Crear un nuevo usuario' })
     @ApiResponse({ status: 201, description: 'El usuario ha sido creado exitosamente.' })
     @ApiResponse({ status: 400, description: 'Datos de entrada inválidos.' })
-    create(@Body() createUserDto: CreateUserDto) {
-        return this.usersService.create(createUserDto);
+    create(@Body() createUserDto: CreateRolesDto) {
+        return this.rolesService.create(createUserDto);
     }
 
     @Patch(':id')
@@ -31,9 +31,9 @@ export class UsersController {
     @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
     update(
         @Param('id', ParseUUIDPipe) id: string,
-        @Body() updateUserDto: UpdateUserDto
+        @Body() updateRolesDto: UpdateRolesDto
     ) {
-        return this.usersService.update(id, updateUserDto);
+        return this.rolesService.update(id, updateRolesDto);
     }
 
     @Delete(':id')
@@ -42,7 +42,7 @@ export class UsersController {
     @ApiResponse({ status: 200, description: 'El usuario ha sido eliminado exitosamente.' })
     @ApiResponse({ status: 404, description: 'Usuario no encontrado.' })
     remove(@Param('id', ParseUUIDPipe) id: string) {
-        return this.usersService.remove(id);
+        return this.rolesService.remove(id);
     }
 
 }

@@ -14,7 +14,7 @@ import config from '../config';
         // Si existe DATABASE_URL (Neon / Render)
         if (url) {
           return {
-            type: 'postgres',
+            type: 'postgres' as const,
             url,
             synchronize: false,
             autoLoadEntities: true,
@@ -26,7 +26,7 @@ import config from '../config';
 
         // Si se usan variables independientes (Postgres local / Docker)
         return {
-          type: 'postgres',
+          type: 'postgres' as const,
           host,
           port,
           username: user,

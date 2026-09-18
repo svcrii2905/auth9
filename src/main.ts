@@ -1,22 +1,28 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(
-    new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
-  );
 
+  app.enableCors({
+    origin: 'http://localhost:4200', // O usa true para permitir cualquier origen en desarrollo
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
+
+  // Configuración de la documentación Swagger
   const config = new DocumentBuilder()
-    .setTitle('Auth9 API')
-    .setDescription('CRUD de usuarios - proyecto SENA ADSO')
-    .setVersion('1.0')
+    .setTitle('API de mi Proyecto') // Título de tu API
+    .setDescription('Documentación de la API del sistema backend') // Descripción
+    .setVersion('1.0') // Versión actual
+    .addTag('usuarios') // Etiquetas para agrupar endpoints (opcional)
+    .addBearerAuth() // Útil si usas autenticación JWT
     .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  // Ruta donde estará disponible la interfaz visual (ej. http://localhost:3000/api)
+  SwaggerModule.setup('api', app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(3000);
 }
 bootstrap();

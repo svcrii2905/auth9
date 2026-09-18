@@ -7,6 +7,7 @@ import * as Joi from 'joi';
 import { enviroments } from './enviroments';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
+import { RolesModule } from './roles/roles.module';
 import config from './config';
 
 @Module({
@@ -36,6 +37,7 @@ import config from './config';
     }),
     DatabaseModule,
     UsersModule,
+    RolesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

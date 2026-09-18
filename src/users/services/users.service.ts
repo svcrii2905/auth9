@@ -1,53 +1,75 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
 import { User } from '../entities/user.entity';
-import { CreateUserDto } from '../dtos/create-user.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
+import { Roles } from 'src/roles/entities/roles.entity';
+import { Repository } from 'typeorm';
+import { CreateUserDto, UpdateUserDto } from '../dtos/create-user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-  ) {}
+    constructor(
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+    ) { }
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
-  }
+    // 1. Cargamos las relaciones explícitamente para incluir los roles
+    async findAll(): Promise<User[]> {
+        return await this.userRepository.find({
+            relations: {
+                roles: true, // Habilita la carga de la relación 'roles'
+            },
+        });
+    }
 
-  async findOne(id: string): Promise<User> {
-    const user = await this.userRepository.findOneBy({ id });
-    if (!user) throw new NotFoundException(`Usuario ${id} no encontrado`);
-    return user;
-  }
+    // Busca un usuario por ID cargando sus roles
+    async findOne(id: string): Promise<User> {
+        const user = await this.userRepository.findOne({
+            where: { id },
+            relations: {
+                roles: true,
+            },
+        });
 
-  async create(dto: CreateUserDto) {
-    const existing = await this.userRepository.findOneBy({ email: dto.email });
-    if (existing) throw new ConflictException('Ya existe un usuario con ese correo');
+        if (!user) {
+            throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+        }
 
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
-    const newUser = this.userRepository.create({ ...dto, password: hashedPassword });
-    const saved = await this.userRepository.save(newUser);
+        return user;
+    }
 
-    const { password, ...result } = saved;
-    return result;
-  }
+    // 2. Mapeamos los IDs de roles a objetos de entidad antes de guardar
+    async create(createUserDto: CreateUserDto): Promise<User> {
+        const { roles, ...userData } = createUserDto;
 
-  async update(id: string, dto: UpdateUserDto) {
-    const user = await this.findOne(id);
-    if (dto.password) dto.password = await bcrypt.hash(dto.password, 10);
+        const newUser = this.userRepository.create({
+            ...userData,
+            // Convertimos el arreglo de IDs ['uuid1', 'uuid2'] a objetos [{ id: 'uuid1' }, { id: 'uuid2' }]
+            roles: roles?.map((id) => ({ id } as Roles)),
+        });
 
-    this.userRepository.merge(user, dto);
-    const saved = await this.userRepository.save(user);
+        return await this.userRepository.save(newUser);
+    }
 
-    const { password, ...result } = saved;
-    return result;
-  }
+    // 3. Manejamos la actualización mapeando los roles si vienen en el DTO
+    async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+        const { roles, ...userData } = updateUserDto;
 
-  async remove(id: string): Promise<void> {
-    const user = await this.findOne(id);
-    await this.userRepository.remove(user);
-  }
+        // Buscamos el usuario existente
+        const user = await this.findOne(id);
+
+        // Fusionamos los datos simples
+        this.userRepository.merge(user, userData);
+
+        // Si se enviaron roles en la petición, actualizamos la relación
+        if (roles) {
+            user.roles = roles.map((roleId) => ({ id: roleId } as Roles));
+        }
+
+        return await this.userRepository.save(user);
+    }
+
+    async remove(id: string): Promise<void> {
+        const user = await this.findOne(id);
+        await this.userRepository.remove(user);
+    }
 }
